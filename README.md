@@ -1,13 +1,20 @@
-# You to Us Backend
+# You to Us Frontend
 
-This is the backend for the You to Us app connecting farmers directly to customers.
+## How to run
 
-## Deploying
+1. Install Node.js and Expo CLI globally if you haven't:
+   ```bash
+   npm install -g expo-cli
+   ```
 
-- Use `npm start` to start the server
-- Make sure you set environment variables (like PORT, MongoDB URI) on your hosting provider
-- Server listens on `process.env.PORT` or default 10000
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-## Routes
+3. Start the app:
+   ```bash
+   expo start
+   ```
 
-- GET / : test route
+4. Open on your device with Expo Go or run on web with `expo start --web`

@@ -1,14 +1,54 @@
 {
-  "name": "you-to-us-backend",
-  "version": "1.0.0",
-  "description": "Backend for You to Us app connecting farmers directly to customers",
-  "main": "index.js",
+  "main": "node_modules/expo/AppEntry.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "body-parser": "^1.20.2"
+    "expo": "~48.0.0",
+    "react": "18.2.0",
+    "react-native": "0.71.8"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.19.0"
+  },
+  "private": true,
+  "expo": {
+    "name": "You to Us",
+    "slug": "you-to-us",
+    "version": "1.0.0",
+    "sdkVersion": "48.0.0",
+    "platforms": ["ios", "android", "web"],
+    "extra": {
+      "apiBaseUrl": "https://you-to-us-backend.onrender.com"
+    },
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
   }
 }
