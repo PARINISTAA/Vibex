@@ -1,0 +1,207 @@
+import React, { useState, useEffect } from 'react';
+import './App.css';
+import { initializeApp } from "firebase/app";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut
+} from "firebase/auth";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  serverTimestamp
+} from "firebase/firestore";
+
+// --- Paste your Firebase config here ---
+const firebaseConfig = {
+  apiKey: "AIzaSyCpFdtGn5ix1qGGPeLbLstNfKg2wglSIPQ",
+  authDomain: "vibecodingparinistaa.firebaseapp.com",
+  projectId: "vibecodingparinistaa",
+  storageBucket: "vibecodingparinistaa.firebasestorage.app",
+  messagingSenderId: "828872584313",
+  appId: "1:828872584313:web:62f8ea2ee1f6808c9838a8",
+   measurementId: "G-K73XVRLW1K"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+function App() {
+  const [user, setUser] = useState(null);
+  const [isLogin, setIsLogin] = useState(true);
+  const [role, setRole] = useState('customer'); // farmer or customer
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  // Farmer produce state
+  const [produceName, setProduceName] = useState('');
+  const [producePrice, setProducePrice] = useState('');
+  const [produceList, setProduceList] = useState([]);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, currentUser => {
+      setUser(currentUser);
+      if (currentUser && role === 'customer') fetchProduce();
+    });
+    return () => unsub();
+  }, [role]);
+
+  // Fetch produce from Firestore
+  async function fetchProduce() {
+    const q = query(collection(db, "produce"), orderBy("createdAt", "desc"));
+    const querySnapshot = await getDocs(q);
+    const items = [];
+    querySnapshot.forEach(doc => {
+      items.push({ id: doc.id, ...doc.data() });
+    });
+    setProduceList(items);
+  }
+
+  // Signup or login
+  async function handleAuth() {
+    try {
+      if (isLogin) {
+        await signInWithEmailAndPassword(auth, email, password);
+      } else {
+        await createUserWithEmailAndPassword(auth, email, password);
+      }
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  // Add produce (farmer)
+  async function addProduce() {
+    if (!produceName || !producePrice) return alert("Fill all fields");
+    await addDoc(collection(db, "produce"), {
+      farmerId: user.uid,
+      name: produceName,
+      price: parseFloat(producePrice),
+      createdAt: serverTimestamp()
+    });
+    setProduceName('');
+    setProducePrice('');
+    fetchProduce();
+  }
+
+  // Logout
+  function logout() {
+    signOut(auth);
+    setProduceList([]);
+  }
+
+  // Independence Day themed colors
+  const themeColors = {
+    orange: '#FF6F00',
+    white: '#FFFFFF',
+    green: '#2E7D32',
+  };
+
+  if (!user) {
+    // Login/signup page
+    return (
+      <div style={{
+        background: `linear-gradient(135deg, ${themeColors.orange}, ${themeColors.white}, ${themeColors.green})`,
+        minHeight: '100vh',
+        display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'
+      }}>
+        <h1 style={{ color: themeColors.orange }}>YouToUs - Direct Farmer Market</h1>
+        <p style={{color: themeColors.green, fontWeight: 'bold', maxWidth: '300px', textAlign:'center'}}>
+          Celebrating Independence by connecting farmers directly to customers.
+        </p>
+        <select value={role} onChange={e => setRole(e.target.value)} style={{margin: '10px'}}>
+          <option value="customer">Customer</option>
+          <option value="farmer">Farmer</option>
+        </select>
+        <input type="email" placeholder="Email" value={email}
+          onChange={e => setEmail(e.target.value)} style={{padding: '8px', margin: '5px', width:'200px'}}/>
+        <input type="password" placeholder="Password" value={password}
+          onChange={e => setPassword(e.target.value)} style={{padding: '8px', margin: '5px', width:'200px'}}/>
+        <button onClick={handleAuth}
+          style={{
+            backgroundColor: role === 'farmer' ? themeColors.orange : themeColors.green,
+            color: themeColors.white,
+            border: 'none',
+            padding: '10px 20px',
+            marginTop: '10px',
+            cursor: 'pointer',
+            borderRadius: '4px'
+          }}>
+          {isLogin ? 'Login' : 'Sign Up'}
+        </button>
+        <p style={{color: themeColors.orange, cursor:'pointer', marginTop:'10px'}}
+          onClick={() => setIsLogin(!isLogin)}>
+          {isLogin ? 'Create an account' : 'Have an account? Login'}
+        </p>
+      </div>
+    );
+  }
+
+  // Logged in farmer dashboard
+  if (role === 'farmer') {
+    return (
+      <div style={{ padding: 20 }}>
+        <h2 style={{ color: themeColors.orange }}>Farmer Dashboard</h2>
+        <button onClick={logout} style={{ marginBottom: 20 }}>Logout</button>
+        <h3>Add Produce</h3>
+        <input
+          placeholder="Produce Name"
+          value={produceName}
+          onChange={e => setProduceName(e.target.value)}
+          style={{marginRight: 10, padding: 5}}
+        />
+        <input
+          type="number"
+          placeholder="Price (₹)"
+          value={producePrice}
+          onChange={e => setProducePrice(e.target.value)}
+          style={{marginRight: 10, padding: 5}}
+        />
+        <button onClick={addProduce} style={{
+          backgroundColor: themeColors.orange,
+          color: themeColors.white,
+          border: 'none',
+          padding: '5px 15px',
+          cursor: 'pointer',
+          borderRadius: '5px'
+        }}>Add</button>
+      </div>
+    );
+  }
+
+  // Logged in customer dashboard
+  if (role === 'customer') {
+    return (
+      <div style={{ padding: 20 }}>
+        <h2 style={{ color: themeColors.green }}>Customer Dashboard</h2>
+        <button onClick={logout} style={{ marginBottom: 20 }}>Logout</button>
+        <h3>Available Produce</h3>
+        {produceList.length === 0 ? (
+          <p>No produce available right now. Please check back later!</p>
+        ) : (
+          <ul>
+            {produceList.map(item => (
+              <li key={item.id} style={{ marginBottom: 10 }}>
+                <strong>{item.name}</strong> — ₹{item.price.toFixed(2)}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  }
+
+  return null;
+}
+
+export default App;
+
